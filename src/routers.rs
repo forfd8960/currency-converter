@@ -1,12 +1,11 @@
 use axum::{
-    extract::State,
     http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
 
-use crate::{errors::AppError, state::AppState};
+use crate::{errors::AppError, rate::RateGetter};
 
 use serde::{Deserialize, Serialize};
 
@@ -23,11 +22,10 @@ pub struct CurrencyConvertResponse {
     pub unit: String,
 }
 
-pub async fn get_router(state: AppState) -> Result<axum::Router, AppError> {
+pub async fn get_router() -> Result<axum::Router, AppError> {
     let api_router = Router::new()
         .route("/index", get(index))
-        .route("/convert", post(convert_handler))
-        .with_state(state.clone());
+        .route("/convert", post(convert_handler));
 
     Ok(api_router)
 }
@@ -37,21 +35,21 @@ pub async fn index() -> impl IntoResponse {
 }
 
 pub async fn convert_handler(
-    State(state): State<AppState>,
     Json(req): Json<CurrencyConvertRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-    if !state.symbols.contains_key(&req.from_unit) || !state.symbols.contains_key(&req.to) {
-        return Err(AppError::NotFound("Currency not supported".to_string()));
-    }
-
-    let rate = state.exchange_rate.get(&req.from_unit);
+    let rate_getter = RateGetter::new(req.from_unit.clone().to_lowercase());
+    let exchange_rate = rate_getter.get_exc_rate().await?;
+    let rate = exchange_rate.get_rate(&req.to.to_lowercase());
     if rate.is_none() {
-        return Err(AppError::NotFound("rate not found".to_string()));
+        return Err(AppError::ConvertError(format!(
+            "currency: {} not found",
+            req.to
+        )));
     }
 
     let resp = CurrencyConvertResponse {
-        result: req.from_value * rate.unwrap().rate,
-        unit: req.to,
+        result: req.from_value * rate.unwrap(),
+        unit: req.to.clone(),
     };
 
     Ok((StatusCode::OK, Json(resp)))

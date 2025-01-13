@@ -11,7 +11,6 @@ axum = { version = "0.8.1", features = [
     "tracing",
     "multipart",
 ]}
-
 axum-extra = { version = "0.10.0", features = ["typed-header"] }
 thiserror = "2.0.9"
 tokio = { version = "1.37.0", features = ["rt", "rt-multi-thread", "macros"] }
@@ -19,3 +18,5 @@ tokio-util = { version = "0.7.12", features = ["io"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 serde = { version = "1.0.198", features = ["derive"] }
+reqwest = { version="0.12.12", features = ["json", "blocking"] }
+serde_json = "1.0.135"

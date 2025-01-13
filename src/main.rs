@@ -1,5 +1,4 @@
 use currency_converter::routers::get_router;
-use currency_converter::state::AppState;
 use tokio::net::TcpListener;
 use tracing::{info, level_filters::LevelFilter};
 use tracing_subscriber::{fmt::Layer, layer::SubscriberExt, util::SubscriberInitExt, Layer as _};
@@ -14,8 +13,7 @@ async fn main() -> anyhow::Result<()> {
     let listener = TcpListener::bind(&addr).await?;
     info!("Listening on: {}", addr);
 
-    let state = AppState::new();
-    let app = get_router(state).await?;
+    let app = get_router().await?;
     axum::serve(listener, app.into_make_service()).await?;
 
     Ok(())

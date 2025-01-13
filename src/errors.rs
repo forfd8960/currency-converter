@@ -9,6 +9,9 @@ pub enum AppError {
 
     #[error("{0}")]
     ConvertError(String),
+
+    #[error("{0}")]
+    GetRateError(String),
 }
 
 impl IntoResponse for AppError {
@@ -16,6 +19,7 @@ impl IntoResponse for AppError {
         let status_code = match self {
             AppError::NotFound(_) => StatusCode::NOT_FOUND,
             AppError::ConvertError(_) => StatusCode::BAD_REQUEST,
+            AppError::GetRateError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
         (status_code, format!("{:?}", self)).into_response()
